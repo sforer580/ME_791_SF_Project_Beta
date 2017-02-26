@@ -19,19 +19,24 @@ class Parameters
     friend class Q_Learner;
     friend class Individual;
     friend class Enviornment;
+    friend class Q_Value;
     
 protected:
     
     
 public:
     int num_indv = 1;
-    int x_dim = 13;
-    int y_dim = 13;
+    int x_dim = 3;
+    int y_dim = 3;
     int num_states = x_dim*y_dim;
-    int goal_x = 5;
-    int goal_y = 5;
-    int agent_start_x = 20;
+    int goal_x = 1;
+    int goal_y = 1;
+    int goal_state = goal_x + (goal_y*x_dim);
+    int agent_start_x = 0;
     int agent_start_y = 0;
+    double epsilon = 0;
+    double alpha = 0.1;
+    double gamma = 0.9;
     
     
     

@@ -16,12 +16,14 @@ class Enviornment
     friend class Parameters;
     friend class Q_Learner;
     friend class Individual;
+    friend class Q_Value;
     
 protected:
     
     
 public:
     vector<vector<double>> board;
+    vector<double> reward_table;
     
     
     

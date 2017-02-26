@@ -18,13 +18,20 @@ class Individual
     friend class Parameters;
     friend class Q_Learner;
     friend class Enviornment;
+    friend class Q_Value;
     
 protected:
     
     
 public:
+    vector<vector<double>> q_table;
     int x;
     int y;
+    int state;
+    int greedy;
+    vector<int> valid_action;           //0=no, 1=yes
+    vector<int> path;
+    vector<int> actions;
     
     
 private:
