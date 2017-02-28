@@ -29,7 +29,6 @@ public:
     int y;
     int state;
     int greedy;
-    vector<int> valid_action;           //0=no, 1=yes
     vector<int> path;
     vector<int> actions;
     

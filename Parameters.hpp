@@ -34,9 +34,10 @@ public:
     int goal_state = goal_x + (goal_y*x_dim);
     int agent_start_x = 0;
     int agent_start_y = 0;
-    double epsilon = 0;
+    double epsilon = 0.1;
     double alpha = 0.1;
     double gamma = 0.9;
+    int num_trys = 10;
     
     
     

@@ -41,6 +41,7 @@ public:
     void Display_Reward_Table();
     //Agent Functions
     void Build_Population();
+    void Build_Q_Table();
     void Assign_Starting_Location();
     //Human Control Functions
     void Human_Move_Agent();
@@ -58,6 +59,7 @@ public:
     void Q_Learner_Move_Agent();
     void Run_Q_Learner_Control();
     void Display_Q_Table();
+    void Clear_Agent_Info();
     //Q_Leaner Functions
     void Build_Grid_World();
     void Run_Program();
@@ -80,15 +82,22 @@ void Q_Learner::Build_Population()
     {
         Individual I;
         agent.push_back(I);
-        vector<double> temp;
-        for (int j=0; j<4; j++)
-        {
-            temp.push_back(0.0001);
-        }
-        for (int k=0; k<pP->x_dim*pP->y_dim; k++)
-        {
-            agent.at(i).q_table.push_back(temp);
-        }
+    }
+}
+
+
+//-------------------------------------------------------------------------
+//Builds the Q-table
+void Q_Learner::Build_Q_Table()
+{
+    vector<double> temp;
+    for (int j=0; j<4; j++)
+    {
+        temp.push_back(0.0001);
+    }
+    for (int k=0; k<pP->x_dim*pP->y_dim; k++)
+    {
+        agent.at(0).q_table.push_back(temp);
     }
 }
 
@@ -310,7 +319,6 @@ void Q_Learner::Display_Board()
 //Builds the grid world
 void Q_Learner::Build_Grid_World()
 {
-    Build_Population();
     Build_Board();
     Assign_Starting_Location();
     Assign_Goal_Location();
@@ -488,6 +496,7 @@ void Q_Learner::Decide()
 //Performs a greedy move
 void Q_Learner::Greedy_Move()
 {
+    cout << "GREEDY MOVE" << endl;
     int s = agent.at(0).state;
     int best = 0;
     for (int m=0; m<4; m++)
@@ -542,6 +551,7 @@ void Q_Learner::Greedy_Move()
 //Performs a random move
 void Q_Learner::Random_Move()
 {
+    cout << "RANDOM MOVE" << endl;
     int r = (int)rand() % 4;
     int new_x = agent.at(0).x;
     int new_y = agent.at(0).y;
@@ -635,30 +645,46 @@ void Q_Learner::Q_Learner_Move_Agent()
 
 
 //-------------------------------------------------------------------------
+//Clears the agent information
+void Q_Learner::Clear_Agent_Info()
+{
+    agent.at(0).path.clear();
+    agent.at(0).actions.clear();
+}
+
+
+//-------------------------------------------------------------------------
 //Runs the Q_learner
 void Q_Learner::Run_Q_Learner_Control()
 {
-    cout << "------------------------------------------------------------------------" << endl;
-    cout << "Q_Learner" << endl;
-    cout << endl;
-    Build_Grid_World();
-    cout << "BEGIN Q_LEANER" << endl;
-    cout << endl;
-    int move_counter = 0;
-    while ((agent.at(0).x != pP->goal_x))
+    Build_Population();
+    Build_Q_Table();
+    for (int t=0; t<pP->num_trys; t++)
     {
-        move_counter += 1;
-        cout << "MOVE NUMBER" << "\t" << move_counter << endl;
-        Q_Learner_Move_Agent();
-        while ((agent.at(0).y != pP->goal_y))
+        cout << "------------------------------------------------------------------------" << endl;
+        cout << "TRY NUMBER" << "\t" << t << endl;
+        cout << endl;
+        Build_Grid_World();
+        Build_Q_Table();
+        cout << "BEGIN Q_LEANER" << endl;
+        cout << endl;
+        int move_counter = 0;
+        while ((agent.at(0).x != pP->goal_x))
         {
             move_counter += 1;
             cout << "MOVE NUMBER" << "\t" << move_counter << endl;
             Q_Learner_Move_Agent();
+            while ((agent.at(0).y != pP->goal_y))
+            {
+                move_counter += 1;
+                cout << "MOVE NUMBER" << "\t" << move_counter << endl;
+                Q_Learner_Move_Agent();
+            }
         }
+        cout << "REACHED GOAL!!!!!" << endl;
+        cout << "NUMBER OF MOVES" << "\t" << move_counter << endl;
+        Clear_Agent_Info();
     }
-    cout << "REACHED GOAL!!!!!" << endl;
-    cout << "NUMBER OF MOVES" << "\t" << move_counter << endl;
 }
 
 
