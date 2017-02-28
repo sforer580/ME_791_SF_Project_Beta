@@ -138,7 +138,7 @@ void Q_Learner::Assign_Values_To_Reward_Table()
 {
     for (int i=0; i<pP->y_dim*pP->x_dim; i++)
     {
-        pE->reward_table.push_back(0);
+        pE->reward_table.push_back(-1);
     }
     for (int s=0; s<(pP->y_dim)*(pP->x_dim); s++)
     {
@@ -156,7 +156,7 @@ void Q_Learner::Assign_Values_To_Reward_Table()
 //Builds the reward table
 void Q_Learner::Build_Reward_Table()
 {
-    Assign_Boundaries_To_Q_Table();
+    //Assign_Boundaries_To_Q_Table();
     Assign_Values_To_Reward_Table();
     Display_Reward_Table();
     Display_Q_Table();
@@ -293,6 +293,7 @@ void Q_Learner::Assign_Goal_Value()
 //Displays the board
 void Q_Learner::Display_Board()
 {
+    cout << "BOARD" << endl;
     for (int x=0; x<pP->x_dim; x++)
     {
         for(int y=0;y<pP->y_dim; y++)
@@ -328,8 +329,8 @@ void Q_Learner::Human_Move_Agent()
     cout << "INPUT MOVEMENT" << endl;
     cout << "1 UP, 2 RIGHT, 3 DOWN, 4 LEFT" << endl;
     cin >> move;
-    int new_x = 0;
-    int new_y = 0;
+    int new_x = agent.at(0).x;
+    int new_y = agent.at(0).y;
     if (move == 1)
     {
         new_y = agent.at(0).y - 1;
@@ -350,7 +351,7 @@ void Q_Learner::Human_Move_Agent()
         new_x = agent.at(0).x - 1;
         new_y = agent.at(0).y;
     }
-    if ((new_x < 0) || (new_x > pP->x_dim) || (new_y < 0) || (new_y > pP->x_dim))
+    if ((new_x < 0) || (new_x > pP->x_dim-1) || (new_y < 0) || (new_y > pP->y_dim-1))
     {
         cout << "OUT OF BOUNDS" << endl;
     }
@@ -391,8 +392,8 @@ void Q_Learner::Run_Human_Control()
 void Q_Learner::Auto_Move_Agent()
 {
     int move;
-    int new_x = 0;
-    int new_y = 0;
+    int new_x = agent.at(0).x;
+    int new_y = agent.at(0).y;
     if (agent.at(0).x < pP->goal_x)
     {
         new_x = agent.at(0).x + 1;
@@ -417,7 +418,7 @@ void Q_Learner::Auto_Move_Agent()
         new_y = agent.at(0).y - 1;
         cout << "MOVE UP" << endl;
     }
-    if ((new_x < 0) || (new_x > pP->x_dim) || (new_y < 0) || (new_y > pP->x_dim))
+    if ((new_x < 0) || (new_x > pP->x_dim-1) || (new_y < 0) || (new_y > pP->y_dim-1))
     {
         cout << "OUT OF BOUNDS" << endl;
     }
@@ -496,26 +497,44 @@ void Q_Learner::Greedy_Move()
             best = m;
         }
     }
+    int new_x = agent.at(0).x;
+    int new_y = agent.at(0).y;
     if (best == 0)
     {
-        agent.at(0).y -= 1;
+        new_y = agent.at(0).y - 1;
+        cout << "MOVE UP" << endl;
     }
     if (best == 1)
     {
-        agent.at(0).x += 1;
+        new_x = agent.at(0).x + 1;
+        cout << "MOVE RIGHT" << endl;
     }
     if (best == 2)
     {
-        agent.at(0).y += 1;
+        new_y = agent.at(0).y + 1;
+        cout << "MOVE DOWN" << endl;
     }
     if (best == 3)
     {
-        agent.at(0).x -= 1;
+        new_x = agent.at(0).x - 1;
+        cout << "MOVE LEFT" << endl;
+    }
+    if ((new_x < 0) || (new_x > pP->x_dim-1) || (new_y < 0) || (new_y > pP->y_dim-1))
+    {
+        cout << "OUT OF BOUNDS" << endl;
+        new_x = agent.at(0).x;
+        new_y = agent.at(0).y;
+    }
+    else
+    {
+        pE->board.at(agent.at(0).y).at(agent.at(0).x) = 0;
+        agent.at(0).x = new_x;
+        agent.at(0).y = new_y;
+        pE->board.at(agent.at(0).y).at(agent.at(0).x) = 1;
     }
     int ss = agent.at(0).x + (agent.at(0).y*pP->x_dim);
     agent.at(0).path.push_back(ss);
     agent.at(0).actions.push_back(best);
-    
 }
 
 
@@ -523,7 +542,45 @@ void Q_Learner::Greedy_Move()
 //Performs a random move
 void Q_Learner::Random_Move()
 {
-    
+    int r = (int)rand() % 4;
+    int new_x = agent.at(0).x;
+    int new_y = agent.at(0).y;
+    if (r == 0)
+    {
+        new_y = agent.at(0).y - 1;
+        cout << "MOVE UP" << endl;
+    }
+    if (r == 1)
+    {
+        new_x = agent.at(0).x + 1;
+        cout << "MOVE RIGHT" << endl;
+    }
+    if (r == 2)
+    {
+        new_y = agent.at(0).y + 1;
+        cout << "MOVE DOWN" << endl;
+    }
+    if (r == 3)
+    {
+        new_x = agent.at(0).x - 1;
+        cout << "MOVE LEFT" << endl;
+    }
+    if ((new_x < 0) || (new_x > pP->x_dim-1) || (new_y < 0) || (new_y > pP->y_dim-1))
+    {
+        cout << "OUT OF BOUNDS" << endl;
+        new_x = agent.at(0).x;
+        new_y = agent.at(0).y;
+    }
+    else
+    {
+        pE->board.at(agent.at(0).y).at(agent.at(0).x) = 0;
+        agent.at(0).x = new_x;
+        agent.at(0).y = new_y;
+        pE->board.at(agent.at(0).y).at(agent.at(0).x) = 1;
+    }
+    int ss = agent.at(0).x + (agent.at(0).y*pP->x_dim);
+    agent.at(0).path.push_back(ss);
+    agent.at(0).actions.push_back(r);
 }
 
 
@@ -573,6 +630,7 @@ void Q_Learner::Q_Learner_Move_Agent()
     Act();
     React();
     Display_Q_Table();
+    Display_Board();
 }
 
 
@@ -586,14 +644,21 @@ void Q_Learner::Run_Q_Learner_Control()
     Build_Grid_World();
     cout << "BEGIN Q_LEANER" << endl;
     cout << endl;
+    int move_counter = 0;
     while ((agent.at(0).x != pP->goal_x))
     {
+        move_counter += 1;
+        cout << "MOVE NUMBER" << "\t" << move_counter << endl;
         Q_Learner_Move_Agent();
         while ((agent.at(0).y != pP->goal_y))
         {
+            move_counter += 1;
+            cout << "MOVE NUMBER" << "\t" << move_counter << endl;
             Q_Learner_Move_Agent();
         }
     }
+    cout << "REACHED GOAL!!!!!" << endl;
+    cout << "NUMBER OF MOVES" << "\t" << move_counter << endl;
 }
 
 
