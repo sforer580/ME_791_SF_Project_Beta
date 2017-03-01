@@ -57,12 +57,19 @@ public:
     void Random_Move();
     void React();
     void Q_Learner_Move_Agent();
-    void Run_Q_Learner_Control();
+    void Run_Q_Learner_Control(int sr);
     void Display_Q_Table();
     void Clear_Agent_Info();
+    //Text File Functions
+    void Write_Q_Table_To_File();
+    //Statistics
+    vector<int> move_data;
+    void Store_Move_Data(int move_data);
+    void Write_Move_Data_To_File();
+    void Delete_txt_Files();
     //Q_Leaner Functions
     void Build_Grid_World();
-    void Run_Program();
+    void Run_Program(int sr);
     
    
     
@@ -93,6 +100,7 @@ void Q_Learner::Build_Q_Table()
     vector<double> temp;
     for (int j=0; j<4; j++)
     {
+        double r = (double)rand()/RAND_MAX;
         temp.push_back(0.0001);
     }
     for (int k=0; k<pP->x_dim*pP->y_dim; k++)
@@ -167,8 +175,8 @@ void Q_Learner::Build_Reward_Table()
 {
     //Assign_Boundaries_To_Q_Table();
     Assign_Values_To_Reward_Table();
-    Display_Reward_Table();
-    Display_Q_Table();
+    //Display_Reward_Table();
+    //Display_Q_Table();
     
 }
 
@@ -198,30 +206,16 @@ void Q_Learner::Display_Reward_Table()
 void Q_Learner::Display_Q_Table()
 {
     cout << "Q_TABLE TABLE" << endl;
-    for(int s=0;s<pP->x_dim*pP->y_dim; s++)
-    {
-        cout << "STATE" << "\t" << s << "\t";
-    }
+    cout << "ACTION" << "\t" << "\t";
+    cout << "UP" << "\t" << "\t";
+    cout << "RIGHT" << "\t" << "\t";
+    cout << "DOWN" << "\t" << "\t";
+    cout << "LEFT" << "\t" << "\t";
     cout << endl;
-    for (int x=0; x<4; x++)
+    for (int y=0; y<pP->num_states; y++)
     {
-        if (x==0)
-        {
-            cout << "UP   " << "\t";
-        }
-        if (x==1)
-        {
-            cout << "RIGHT" << "\t";
-        }
-        if (x==2)
-        {
-            cout << "DOWN" << "\t";
-        }
-        if (x==3)
-        {
-            cout << "LEFT" << "\t";
-        }
-        for(int y=0;y<pP->x_dim*pP->y_dim; y++)
+        cout << "STATE" << "\t" << y << "\t";
+        for(int x=0; x<4; x++)
         {
             cout << agent.at(0).q_table.at(y).at(x) << "\t";
         }
@@ -324,8 +318,8 @@ void Q_Learner::Build_Grid_World()
     Assign_Goal_Location();
     Assign_Goal_Value();
     Build_Reward_Table();
-    cout << "INTIAL GRID" << endl;
-    Display_Board();
+    //cout << "INTIAL GRID" << endl;
+    //Display_Board();
 }
 
 
@@ -472,7 +466,7 @@ void Q_Learner::Sense()
     int A = agent.at(0).x;
     int B = agent.at(0).y*pP->x_dim;
     agent.at(0).state = A+B;
-    cout << "AGENT STATE" << "\t" << agent.at(0).state << endl;
+    //cout << "AGENT STATE" << "\t" << agent.at(0).state << endl;
 }
 
 
@@ -496,9 +490,11 @@ void Q_Learner::Decide()
 //Performs a greedy move
 void Q_Learner::Greedy_Move()
 {
-    cout << "GREEDY MOVE" << endl;
+    //cout << "GREEDY MOVE" << endl;
     int s = agent.at(0).state;
     int best = 0;
+    int move = 0;
+    //finds the best action based on the state and q-table
     for (int m=0; m<4; m++)
     {
         if (agent.at(0).q_table.at(s).at(best) < agent.at(0).q_table.at(s).at(m))
@@ -506,31 +502,57 @@ void Q_Learner::Greedy_Move()
             best = m;
         }
     }
+    
+    vector<int> temp;
+    for (int m=0; m<4; m++)
+    {
+        //finds out which actions for that state have the same q-value
+        if (agent.at(0).q_table.at(s).at(best) == agent.at(0).q_table.at(s).at(m))
+        {
+            temp.push_back(m);
+        }
+    }
+    //if more than one action for that state has the same q value then will chose one of best saction at random
+    if (temp.size() > 1)
+    {
+        int r = (int)rand() % temp.size();
+        move  = temp.at(r);
+    }
+    //else the move will just be the best action
+    else
+    {
+        move = temp.at(0);
+        assert (move == best);
+    }
+    for (int m=0; m<4; m++)
+    {
+        assert(agent.at(0).q_table.at(s).at(move) >= agent.at(0).q_table.at(s).at(m));
+    }
     int new_x = agent.at(0).x;
     int new_y = agent.at(0).y;
     if (best == 0)
     {
         new_y = agent.at(0).y - 1;
-        cout << "MOVE UP" << endl;
+        //cout << "MOVE UP" << endl;
     }
     if (best == 1)
     {
         new_x = agent.at(0).x + 1;
-        cout << "MOVE RIGHT" << endl;
+        //cout << "MOVE RIGHT" << endl;
     }
     if (best == 2)
     {
         new_y = agent.at(0).y + 1;
-        cout << "MOVE DOWN" << endl;
+        //cout << "MOVE DOWN" << endl;
     }
     if (best == 3)
     {
         new_x = agent.at(0).x - 1;
-        cout << "MOVE LEFT" << endl;
+        //cout << "MOVE LEFT" << endl;
     }
     if ((new_x < 0) || (new_x > pP->x_dim-1) || (new_y < 0) || (new_y > pP->y_dim-1))
     {
-        cout << "OUT OF BOUNDS" << endl;
+        //cout << "OUT OF BOUNDS" << endl;
         new_x = agent.at(0).x;
         new_y = agent.at(0).y;
     }
@@ -543,7 +565,7 @@ void Q_Learner::Greedy_Move()
     }
     int ss = agent.at(0).x + (agent.at(0).y*pP->x_dim);
     agent.at(0).path.push_back(ss);
-    agent.at(0).actions.push_back(best);
+    agent.at(0).actions.push_back(move);
 }
 
 
@@ -551,33 +573,33 @@ void Q_Learner::Greedy_Move()
 //Performs a random move
 void Q_Learner::Random_Move()
 {
-    cout << "RANDOM MOVE" << endl;
+    //cout << "RANDOM MOVE" << endl;
     int r = (int)rand() % 4;
     int new_x = agent.at(0).x;
     int new_y = agent.at(0).y;
     if (r == 0)
     {
         new_y = agent.at(0).y - 1;
-        cout << "MOVE UP" << endl;
+        //cout << "MOVE UP" << endl;
     }
     if (r == 1)
     {
         new_x = agent.at(0).x + 1;
-        cout << "MOVE RIGHT" << endl;
+        //cout << "MOVE RIGHT" << endl;
     }
     if (r == 2)
     {
         new_y = agent.at(0).y + 1;
-        cout << "MOVE DOWN" << endl;
+        //cout << "MOVE DOWN" << endl;
     }
     if (r == 3)
     {
         new_x = agent.at(0).x - 1;
-        cout << "MOVE LEFT" << endl;
+        //cout << "MOVE LEFT" << endl;
     }
     if ((new_x < 0) || (new_x > pP->x_dim-1) || (new_y < 0) || (new_y > pP->y_dim-1))
     {
-        cout << "OUT OF BOUNDS" << endl;
+        //cout << "OUT OF BOUNDS" << endl;
         new_x = agent.at(0).x;
         new_y = agent.at(0).y;
     }
@@ -639,8 +661,16 @@ void Q_Learner::Q_Learner_Move_Agent()
     Decide();
     Act();
     React();
-    Display_Q_Table();
-    Display_Board();
+    //Display_Q_Table();
+    //Display_Board();
+}
+
+
+//-------------------------------------------------------------------------
+//Stores the moves made to a vector
+void Q_Learner::Store_Move_Data(int move_counter)
+{
+    move_data.push_back(move_counter);
 }
 
 
@@ -654,47 +684,102 @@ void Q_Learner::Clear_Agent_Info()
 
 
 //-------------------------------------------------------------------------
+//Writes the Q-table to a txt file
+void Q_Learner::Write_Q_Table_To_File()
+{
+    ofstream File1;
+    File1.open("Q_Tabel.txt");
+    File1 << "ACTION" << "\t" << "\t";
+    File1 << "UP" << "\t" << "\t";
+    File1 << "RIGHT" << "\t" << "\t";
+    File1 << "DOWN" << "\t" << "\t";
+    File1 << "LEFT" << "\t" << "\t";
+    File1 << endl;
+    for (int y=0; y<pP->num_states; y++)
+    {
+        File1 << "STATE" << "\t" << y << "\t";
+        for(int x=0; x<4; x++)
+        {
+            File1 << agent.at(0).q_table.at(y).at(x) << "\t";
+        }
+        File1 << endl;
+    }
+    File1.close();
+    agent.at(0).q_table.clear();
+}
+
+
+//-------------------------------------------------------------------------
+//Writes the move data to a txt file
+void Q_Learner::Write_Move_Data_To_File()
+{
+    ofstream File2;
+    File2.open("Move_Data.txt", ios_base::app);
+    for (int t=0; t<pP->num_tries; t++)
+    {
+        File2 << move_data.at(t) << "\t";
+    }
+    File2 << endl;
+    move_data.clear();
+}
+
+
+//-------------------------------------------------------------------------
+//Deletes move data text file
+void Q_Learner::Delete_txt_Files()
+{
+    if( remove( "Move_Data.txt" ) != 0 )
+        perror( "ERROR DELETING FILE" );
+    else
+        puts( "Move_Data FILE SUCCEDDFULLY DELETED" );
+    cout << endl;
+}
+
+
+//-------------------------------------------------------------------------
 //Runs the Q_learner
-void Q_Learner::Run_Q_Learner_Control()
+void Q_Learner::Run_Q_Learner_Control(int sr)
 {
     Build_Population();
     Build_Q_Table();
-    for (int t=0; t<pP->num_trys; t++)
+    for (int t=0; t<pP->num_tries; t++)
     {
-        cout << "------------------------------------------------------------------------" << endl;
-        cout << "TRY NUMBER" << "\t" << t << endl;
+        cout << "SR" << sr << "::" << t << endl;
         cout << endl;
         Build_Grid_World();
         Build_Q_Table();
-        cout << "BEGIN Q_LEANER" << endl;
-        cout << endl;
+        //cout << "BEGIN Q_LEANER" << endl;
+        //cout << endl;
         int move_counter = 0;
         while ((agent.at(0).x != pP->goal_x))
         {
             move_counter += 1;
-            cout << "MOVE NUMBER" << "\t" << move_counter << endl;
+            //cout << "MOVE NUMBER" << "\t" << move_counter << endl;
             Q_Learner_Move_Agent();
             while ((agent.at(0).y != pP->goal_y))
             {
                 move_counter += 1;
-                cout << "MOVE NUMBER" << "\t" << move_counter << endl;
+                //cout << "MOVE NUMBER" << "\t" << move_counter << endl;
                 Q_Learner_Move_Agent();
             }
         }
-        cout << "REACHED GOAL!!!!!" << endl;
-        cout << "NUMBER OF MOVES" << "\t" << move_counter << endl;
+        //cout << "REACHED GOAL!!!!!" << endl;
+        //cout << "NUMBER OF MOVES" << "\t" << move_counter << endl;
+        Store_Move_Data(move_counter);
         Clear_Agent_Info();
     }
+    Write_Q_Table_To_File();
+    Write_Move_Data_To_File();
 }
 
 
 //-------------------------------------------------------------------------
 //Runs the enitre program
-void Q_Learner::Run_Program()
+void Q_Learner::Run_Program(int sr)
 {
     //Run_Human_Control();
     //Run_Auto_Control();
-    Run_Q_Learner_Control();
+    Run_Q_Learner_Control(sr);
 }
 
 #endif /* Q_Learner_hpp */

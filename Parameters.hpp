@@ -26,18 +26,19 @@ protected:
     
 public:
     int num_indv = 1;
-    int x_dim = 3;
-    int y_dim = 3;
+    int x_dim = 13;
+    int y_dim = 13;
     int num_states = x_dim*y_dim;
-    int goal_x = 1;
-    int goal_y = 1;
+    int goal_x = 10;
+    int goal_y = 10;
     int goal_state = goal_x + (goal_y*x_dim);
     int agent_start_x = 0;
     int agent_start_y = 0;
     double epsilon = 0.1;
     double alpha = 0.1;
     double gamma = 0.9;
-    int num_trys = 10;
+    int num_tries = 50;
+    int num_sr = 10;
     
     
     

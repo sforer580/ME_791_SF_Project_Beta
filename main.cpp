@@ -33,5 +33,12 @@ int main()
     Q_Learner Q;
     Q.pP = &P;
     Q.pE = &E;
-    Q.Run_Program();
+    Parameters* pP;
+    pP = &P;
+    Q.Delete_txt_Files();
+    for (int sr=0; sr<pP->num_sr; sr++)
+    {
+        cout << "-----------------------------------------------------------------------------------------------" << endl;
+        Q.Run_Program(sr);
+    }
 }
