@@ -36,9 +36,11 @@ int main()
     Parameters* pP;
     pP = &P;
     Q.Delete_txt_Files();
+    Q.Build_Population();
     for (int sr=0; sr<pP->num_sr; sr++)
     {
         cout << "-----------------------------------------------------------------------------------------------" << endl;
         Q.Run_Program(sr);
     }
+    Q.Run_Test_G();
 }

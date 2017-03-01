@@ -56,10 +56,26 @@ public:
     void Greedy_Move();
     void Random_Move();
     void React();
+    void Run_Test_D(int s, int action);
     void Q_Learner_Move_Agent();
     void Run_Q_Learner_Control(int sr);
     void Display_Q_Table();
-    void Clear_Agent_Info();
+    void Reset_Agent_Info();
+    void Run_Test_E();
+    void Run_Test_F();
+    void Run_Test_G();
+    void Build_Q_Table_2();
+    void Assign_Values_To_Reward_Table_2();
+    void Build_Grid_World_2();
+    void Display_Reward_Table_2();
+    void Display_Q_Table_2();
+    void Sense_2();
+    void Decide_2();
+    void Act_2();
+    void Greedy_Move_2();
+    void Random_Move_2();
+    void React_2();
+    void Q_Learner_Move_Agent_2();
     //Text File Functions
     void Write_Q_Table_To_File();
     //Statistics
@@ -161,10 +177,9 @@ void Q_Learner::Assign_Values_To_Reward_Table()
     {
         if (s == pP->goal_state)
         {
-            pE->reward_table.at(s) = 100;
+            pE->reward_table.at(s) = pP->goal_reward;
         }
     }
-    
 }
 
 
@@ -245,8 +260,8 @@ void Q_Learner::Assign_Starting_Location()
     agent.at(0).path.push_back(s);
     assert(agent.at(0).x > 0 || agent.at(0).x < pP->x_dim);
     assert(agent.at(0).y > 0 || agent.at(0).y < pP->y_dim);
-    cout << "TEST A PASSED" << endl;
-    cout << endl;
+    //cout << "TEST A PASSED" << endl;
+    //cout << endl;
     pE->board.at(agent.at(0).y).at(agent.at(0).x) = 1;
 }
 
@@ -288,7 +303,7 @@ void Q_Learner::Assign_Goal_Location()
 //Assigns the goal value
 void Q_Learner::Assign_Goal_Value()
 {
-    pE->board.at(pP->goal_x).at(pP->goal_y) = 100;
+    pE->board.at(pP->goal_x).at(pP->goal_y) = pP->goal_reward;
 }
 
 
@@ -617,13 +632,21 @@ void Q_Learner::Random_Move()
 
 
 //-------------------------------------------------------------------------
+//Checks to see if a Q-value ever exceeds the goal value
+void Q_Learner::Run_Test_D(int s, int action)
+{
+    assert (agent.at(0).q_table.at(s).at(action) <= pP->goal_reward+1);
+}
+
+
+//-------------------------------------------------------------------------
 //Reacts to the movement and updates the Q_Table
 void Q_Learner::React()
 {
-    int action_1 = agent.at(0).actions.at(agent.at(0).actions.size()-1);
+    int action = agent.at(0).actions.at(agent.at(0).actions.size()-1);
     int s = agent.at(0).path.at(agent.at(0).path.size()-2);
     int ss = agent.at(0).path.at(agent.at(0).path.size()-1);
-    double A = agent.at(0).q_table.at(s).at(action_1);
+    double A = agent.at(0).q_table.at(s).at(action);
     int best = 0;
     for (int m=0; m<4; m++)
     {
@@ -634,7 +657,7 @@ void Q_Learner::React()
     }
     double B = agent.at(0).q_table.at(ss).at(best);
     double R = pE->reward_table.at(ss);
-    agent.at(0).q_table.at(s).at(action_1) = A+pP->alpha*(R+(pP->gamma*B)-A);
+    agent.at(0).q_table.at(s).at(action) = A+pP->alpha*(R+(pP->gamma*B)-A);
 }
 
 
@@ -675,11 +698,29 @@ void Q_Learner::Store_Move_Data(int move_counter)
 
 
 //-------------------------------------------------------------------------
+//Checks that the agent is reset to the staring location
+void Q_Learner::Run_Test_E()
+{
+    assert(agent.at(0).x == pP->agent_start_x && agent.at(0).y == pP->agent_start_y);
+}
+
+
+//-------------------------------------------------------------------------
+//Checks that the agent was capbable of learning a near optimal path
+void Q_Learner::Run_Test_F()
+{
+    assert(move_data.at(move_data.size()-1) <= pP->optimal + pP->optimal*0.5);
+}
+
+
+//-------------------------------------------------------------------------
 //Clears the agent information
-void Q_Learner::Clear_Agent_Info()
+void Q_Learner::Reset_Agent_Info()
 {
     agent.at(0).path.clear();
     agent.at(0).actions.clear();
+    Assign_Starting_Location();
+    Run_Test_E();
 }
 
 
@@ -740,7 +781,6 @@ void Q_Learner::Delete_txt_Files()
 //Runs the Q_learner
 void Q_Learner::Run_Q_Learner_Control(int sr)
 {
-    Build_Population();
     Build_Q_Table();
     for (int t=0; t<pP->num_tries; t++)
     {
@@ -766,10 +806,339 @@ void Q_Learner::Run_Q_Learner_Control(int sr)
         //cout << "REACHED GOAL!!!!!" << endl;
         //cout << "NUMBER OF MOVES" << "\t" << move_counter << endl;
         Store_Move_Data(move_counter);
-        Clear_Agent_Info();
+        Reset_Agent_Info();
     }
+    Run_Test_F();
     Write_Q_Table_To_File();
     Write_Move_Data_To_File();
+}
+
+
+//-------------------------------------------------------------------------
+//Builds the Q-table for the 2nd state representation
+void Q_Learner::Build_Q_Table_2()
+{
+    vector<double> temp;
+    for (int j=0; j<4; j++)
+    {
+        double r = (double)rand()/RAND_MAX;
+        temp.push_back(0.0001);
+    }
+    for (int k=0; k<4; k++)
+    {
+        agent.at(0).q_table.push_back(temp);
+    }
+}
+
+
+//-------------------------------------------------------------------------
+//Assigns a negative reward to the actions that would be out of bounds
+void Q_Learner::Assign_Values_To_Reward_Table_2()
+{
+    for (int i=0; i<4; i++)
+    {
+        pE->reward_table.push_back(-1);
+    }
+    pE->reward_table.at(3) = pP->goal_reward;
+}
+
+
+//-------------------------------------------------------------------------
+//Displays the reward table
+void Q_Learner::Display_Reward_Table_2()
+{
+    cout << "REWARD TABLE" << endl;
+    for (int s=0; s<4; s++)
+    {
+        cout << pE->reward_table.at(s) << "\t";
+    }
+    cout << endl;
+    cout << endl;
+}
+
+
+//-------------------------------------------------------------------------
+//Displays the  Q-table
+void Q_Learner::Display_Q_Table_2()
+{
+    cout << "Q_TABLE TABLE" << endl;
+    cout << "ACTION" << "\t" << "\t";
+    cout << "UP" << "\t" << "\t";
+    cout << "RIGHT" << "\t" << "\t";
+    cout << "DOWN" << "\t" << "\t";
+    cout << "LEFT" << "\t" << "\t";
+    cout << endl;
+    for (int y=0; y<4; y++)
+    {
+        cout << "STATE" << "\t" << y << "\t";
+        for(int x=0; x<4; x++)
+        {
+            cout << agent.at(0).q_table.at(y).at(x) << "\t";
+        }
+        cout << endl;
+    }
+    cout << endl;
+}
+
+
+//-------------------------------------------------------------------------
+//Builds the gridworld for the new state representation
+void Q_Learner::Build_Grid_World_2()
+{
+    Build_Board();
+    Assign_Values_To_Reward_Table_2();
+    Assign_Starting_Location();
+    Assign_Goal_Location();
+    Assign_Goal_Value();
+    //Display_Reward_Table_2();
+    //Display_Q_Table_2();
+    //Display_Board();
+}
+
+
+//-------------------------------------------------------------------------
+//Sneses the agents state
+void Q_Learner::Sense_2()
+{
+    if(agent.at(0).x <= pP->goal_x && agent.at(0).y <= pP->goal_y)
+    {
+        agent.at(0).state = 0;
+    }
+    if(agent.at(0).x > pP->goal_x && agent.at(0).y <= pP->goal_y)
+    {
+        agent.at(0).state = 1;
+    }
+    if(agent.at(0).y > pP->goal_y)
+    {
+        agent.at(0).state = 2;
+    }
+    if(agent.at(0).x > pP->goal_x && agent.at(0).y > pP->goal_y)
+    {
+        agent.at(0).state = 3;
+    }
+    //cout << "AGENT STATE" << "\t" << agent.at(0).state << endl;
+}
+
+
+//-------------------------------------------------------------------------
+//Decides if greedy or not
+void Q_Learner::Decide_2()
+{
+    double r = (double)rand()/RAND_MAX;
+    if (r <= (1-pP->epsilon))
+    {
+        agent.at(0).greedy = 1;     //will do a greedy action
+    }
+    else
+    {
+        agent.at(0).greedy = 0;     //will do a random action
+    }
+}
+
+
+//-------------------------------------------------------------------------
+//Performs a greedy move
+void Q_Learner::Greedy_Move_2()
+{
+    //cout << "GREEDY MOVE" << endl;
+    int s = agent.at(0).state;
+    int best = 0;
+    int move = 0;
+    //finds the best action based on the state and q-table
+    for (int m=0; m<4; m++)
+    {
+        if (agent.at(0).q_table.at(s).at(best) < agent.at(0).q_table.at(s).at(m))
+        {
+            best = m;
+        }
+    }
+    
+    vector<int> temp;
+    for (int m=0; m<4; m++)
+    {
+        //finds out which actions for that state have the same q-value
+        if (agent.at(0).q_table.at(s).at(best) == agent.at(0).q_table.at(s).at(m))
+        {
+            temp.push_back(m);
+        }
+    }
+    //if more than one action for that state has the same q value then will chose one of best saction at random
+    if (temp.size() > 1)
+    {
+        int r = (int)rand() % temp.size();
+        move  = temp.at(r);
+    }
+    //else the move will just be the best action
+    else
+    {
+        move = temp.at(0);
+        assert (move == best);
+    }
+    for (int m=0; m<4; m++)
+    {
+        assert(agent.at(0).q_table.at(s).at(move) >= agent.at(0).q_table.at(s).at(m));
+    }
+    int new_x = agent.at(0).x;
+    int new_y = agent.at(0).y;
+    if (best == 0)
+    {
+        new_y = agent.at(0).y - 1;
+        //cout << "MOVE UP" << endl;
+    }
+    if (best == 1)
+    {
+        new_x = agent.at(0).x + 1;
+        //cout << "MOVE RIGHT" << endl;
+    }
+    if (best == 2)
+    {
+        new_y = agent.at(0).y + 1;
+        //cout << "MOVE DOWN" << endl;
+    }
+    if (best == 3)
+    {
+        new_x = agent.at(0).x - 1;
+        //cout << "MOVE LEFT" << endl;
+    }
+    if ((new_x < 0) || (new_x > pP->x_dim-1) || (new_y < 0) || (new_y > pP->y_dim-1))
+    {
+        //cout << "OUT OF BOUNDS" << endl;
+        new_x = agent.at(0).x;
+        new_y = agent.at(0).y;
+    }
+    else
+    {
+        pE->board.at(agent.at(0).y).at(agent.at(0).x) = 0;
+        agent.at(0).x = new_x;
+        agent.at(0).y = new_y;
+        pE->board.at(agent.at(0).y).at(agent.at(0).x) = 1;
+    }
+    Sense_2();
+    agent.at(0).path.push_back(agent.at(0).state);
+    agent.at(0).actions.push_back(move);
+}
+
+
+//-------------------------------------------------------------------------
+//Performs a random move
+void Q_Learner::Random_Move_2()
+{
+    //cout << "RANDOM MOVE" << endl;
+    int r = (int)rand() % 4;
+    int new_x = agent.at(0).x;
+    int new_y = agent.at(0).y;
+    if (r == 0)
+    {
+        new_y = agent.at(0).y - 1;
+        //cout << "MOVE UP" << endl;
+    }
+    if (r == 1)
+    {
+        new_x = agent.at(0).x + 1;
+        //cout << "MOVE RIGHT" << endl;
+    }
+    if (r == 2)
+    {
+        new_y = agent.at(0).y + 1;
+        //cout << "MOVE DOWN" << endl;
+    }
+    if (r == 3)
+    {
+        new_x = agent.at(0).x - 1;
+        //cout << "MOVE LEFT" << endl;
+    }
+    if ((new_x < 0) || (new_x > pP->x_dim-1) || (new_y < 0) || (new_y > pP->y_dim-1))
+    {
+        //cout << "OUT OF BOUNDS" << endl;
+        new_x = agent.at(0).x;
+        new_y = agent.at(0).y;
+    }
+    else
+    {
+        pE->board.at(agent.at(0).y).at(agent.at(0).x) = 0;
+        agent.at(0).x = new_x;
+        agent.at(0).y = new_y;
+        pE->board.at(agent.at(0).y).at(agent.at(0).x) = 1;
+    }
+    Sense_2();
+    agent.at(0).path.push_back(agent.at(0).state);
+    agent.at(0).actions.push_back(r);
+}
+
+
+//-------------------------------------------------------------------------
+//Reacts to the movement and updates the Q_Table
+void Q_Learner::React_2()
+{
+    int action = agent.at(0).actions.at(agent.at(0).actions.size()-1);
+    int s = agent.at(0).path.at(agent.at(0).path.size()-2);
+    int ss = agent.at(0).path.at(agent.at(0).path.size()-1);
+    double A = agent.at(0).q_table.at(s).at(action);
+    int best = 0;
+    for (int m=0; m<4; m++)
+    {
+        if (agent.at(0).q_table.at(ss).at(best) < agent.at(0).q_table.at(ss).at(m))
+        {
+            best = m;
+        }
+    }
+    double B = agent.at(0).q_table.at(ss).at(best);
+    double R = pE->reward_table.at(ss);
+    agent.at(0).q_table.at(s).at(action) = A+pP->alpha*(R+(pP->gamma*B)-A);
+    Run_Test_D(s, action);
+}
+
+
+//-------------------------------------------------------------------------
+//Moves the agent based on if it is a greedy action or not
+void Q_Learner::Act_2()
+{
+    if (agent.at(0).greedy == 1)
+    {
+        Greedy_Move_2();
+    }
+    if (agent.at(0).greedy == 0)
+    {
+        Random_Move_2();
+    }
+}
+
+
+//-------------------------------------------------------------------------
+//Runs the Q_Learner movement functions
+void Q_Learner::Q_Learner_Move_Agent_2()
+{
+    Sense_2();
+    Decide_2();
+    Act_2();
+    React_2();
+    //Display_Q_Table_2();
+    //Display_Board();
+}
+
+
+//-------------------------------------------------------------------------
+//Runs test E
+void Q_Learner::Run_Test_G()
+{
+    agent.clear();
+    Build_Population();
+    Build_Q_Table_2();
+    Build_Grid_World_2();
+    while ((agent.at(0).x != pP->goal_x))
+    {
+        //cout << "MOVE NUMBER" << "\t" << move_counter << endl;
+        Q_Learner_Move_Agent_2();
+        while ((agent.at(0).y != pP->goal_y))
+        {
+            //cout << "MOVE NUMBER" << "\t" << move_counter << endl;
+            Q_Learner_Move_Agent_2();
+        }
+    }
+    cout << "REACHED GOAL" << endl;
+    assert(agent.at(0).x == pP->goal_x && agent.at(0).y == pP->goal_y);
+    cout << "TEST G PASSED" << endl;
+    agent.at(0).q_table.clear();
 }
 
 

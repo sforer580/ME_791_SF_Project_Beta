@@ -32,13 +32,15 @@ public:
     int goal_x = 10;
     int goal_y = 10;
     int goal_state = goal_x + (goal_y*x_dim);
+    double goal_reward = 100;
     int agent_start_x = 0;
     int agent_start_y = 0;
+    int optimal = abs(goal_x-agent_start_x) + abs(goal_y-agent_start_y);
     double epsilon = 0.1;
     double alpha = 0.1;
     double gamma = 0.9;
-    int num_tries = 50;
-    int num_sr = 10;
+    int num_tries = 1000;
+    int num_sr = 30;
     
     
     
