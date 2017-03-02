@@ -62,7 +62,7 @@ public:
     void Display_Q_Table();
     void Reset_Agent_Info();
     void Run_Test_E();
-    void Run_Test_F();
+    void Run_Test_F(int sr);
     void Run_Test_G();
     void Build_Q_Table_2();
     void Assign_Values_To_Reward_Table_2();
@@ -635,7 +635,7 @@ void Q_Learner::Random_Move()
 //Checks to see if a Q-value ever exceeds the goal value
 void Q_Learner::Run_Test_D(int s, int action)
 {
-    assert (agent.at(0).q_table.at(s).at(action) <= pP->goal_reward+1);
+    assert (agent.at(0).q_table.at(s).at(action) <= pP->goal_reward);
 }
 
 
@@ -707,9 +707,16 @@ void Q_Learner::Run_Test_E()
 
 //-------------------------------------------------------------------------
 //Checks that the agent was capbable of learning a near optimal path
-void Q_Learner::Run_Test_F()
+void Q_Learner::Run_Test_F(int sr)
 {
-    assert(move_data.at(move_data.size()-1) <= pP->optimal + pP->optimal*0.5);
+    if (move_data.at(move_data.size()-1) <= pP->optimal + pP->optimal*0.5)
+    {
+        pP->test_F_counter += 1;
+    }
+    if (sr == pP->num_sr-1)
+    {
+        assert(pP->test_F_counter >= 0.75*pP->num_sr);
+    }
 }
 
 
@@ -808,7 +815,7 @@ void Q_Learner::Run_Q_Learner_Control(int sr)
         Store_Move_Data(move_counter);
         Reset_Agent_Info();
     }
-    Run_Test_F();
+    Run_Test_F(sr);
     Write_Q_Table_To_File();
     Write_Move_Data_To_File();
 }
@@ -1085,7 +1092,7 @@ void Q_Learner::React_2()
     double B = agent.at(0).q_table.at(ss).at(best);
     double R = pE->reward_table.at(ss);
     agent.at(0).q_table.at(s).at(action) = A+pP->alpha*(R+(pP->gamma*B)-A);
-    Run_Test_D(s, action);
+    //Run_Test_D(s, action);
 }
 
 
@@ -1105,7 +1112,7 @@ void Q_Learner::Act_2()
 
 
 //-------------------------------------------------------------------------
-//Runs the Q_Learner movement functions
+//Runs the 2nd Q_Learner movement functions
 void Q_Learner::Q_Learner_Move_Agent_2()
 {
     Sense_2();
@@ -1121,6 +1128,7 @@ void Q_Learner::Q_Learner_Move_Agent_2()
 //Runs test E
 void Q_Learner::Run_Test_G()
 {
+    pP->test_F_counter = 0;
     agent.clear();
     Build_Population();
     Build_Q_Table_2();

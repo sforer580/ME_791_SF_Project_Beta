@@ -37,10 +37,11 @@ public:
     int agent_start_y = 0;
     int optimal = abs(goal_x-agent_start_x) + abs(goal_y-agent_start_y);
     double epsilon = 0.1;
-    double alpha = 0.1;
+    double alpha = 0.5;
     double gamma = 0.9;
-    int num_tries = 1000;
+    int num_tries = 350;
     int num_sr = 30;
+    int test_F_counter = 0;
     
     
     
