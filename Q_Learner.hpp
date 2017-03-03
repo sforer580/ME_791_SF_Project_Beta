@@ -63,7 +63,7 @@ public:
     void Reset_Agent_Info();
     void Run_Test_E();
     void Run_Test_F(int sr);
-    void Run_Test_G();
+    void Run_Test_G(int sr);
     void Build_Q_Table_2();
     void Assign_Values_To_Reward_Table_2();
     void Build_Grid_World_2();
@@ -78,10 +78,12 @@ public:
     void Q_Learner_Move_Agent_2();
     //Text File Functions
     void Write_Q_Table_To_File();
+    void Write_Q_Table_To_File_2();
     //Statistics
     vector<int> move_data;
     void Store_Move_Data(int move_data);
     void Write_Move_Data_To_File();
+    void Write_Move_Data_To_File_2();
     void Delete_txt_Files();
     //Q_Leaner Functions
     void Build_Grid_World();
@@ -635,7 +637,7 @@ void Q_Learner::Random_Move()
 //Checks to see if a Q-value ever exceeds the goal value
 void Q_Learner::Run_Test_D(int s, int action)
 {
-    assert (agent.at(0).q_table.at(s).at(action) <= pP->goal_reward);
+    assert (agent.at(0).q_table.at(s).at(action) <= pP->goal_reward+1);
 }
 
 
@@ -658,6 +660,7 @@ void Q_Learner::React()
     double B = agent.at(0).q_table.at(ss).at(best);
     double R = pE->reward_table.at(ss);
     agent.at(0).q_table.at(s).at(action) = A+pP->alpha*(R+(pP->gamma*B)-A);
+    Run_Test_D(s, action);
 }
 
 
@@ -702,6 +705,18 @@ void Q_Learner::Store_Move_Data(int move_counter)
 void Q_Learner::Run_Test_E()
 {
     assert(agent.at(0).x == pP->agent_start_x && agent.at(0).y == pP->agent_start_y);
+    int count = 0;
+    for (int s=0; s<pP->num_states; s++)
+    {
+        for (int action=0; action<4; action++)
+        {
+            if (agent.at(0).q_table.at(s).at(action) != 0.0001)
+            {
+                count = 1;
+            }
+        }
+    }
+    assert(count == 1);
 }
 
 
@@ -726,8 +741,7 @@ void Q_Learner::Reset_Agent_Info()
 {
     agent.at(0).path.clear();
     agent.at(0).actions.clear();
-    Assign_Starting_Location();
-    Run_Test_E();
+    //Assign_Starting_Location();
 }
 
 
@@ -776,11 +790,20 @@ void Q_Learner::Write_Move_Data_To_File()
 //Deletes move data text file
 void Q_Learner::Delete_txt_Files()
 {
+    
     if( remove( "Move_Data.txt" ) != 0 )
-        perror( "ERROR DELETING FILE" );
+        perror( "ERROR DELETING FILE Move_Data" );
     else
         puts( "Move_Data FILE SUCCEDDFULLY DELETED" );
     cout << endl;
+
+    
+    if( remove( "Move_Data_2.txt" ) != 0 )
+        perror( "ERROR DELETING FILE Move_Data_2" );
+    else
+        puts( "Move_Data FILE SUCCEDDFULLY DELETED" );
+    cout << endl;
+    
 }
 
 
@@ -810,10 +833,13 @@ void Q_Learner::Run_Q_Learner_Control(int sr)
                 Q_Learner_Move_Agent();
             }
         }
+        assert(agent.at(0).x == pP->goal_x && agent.at(0).y == pP->goal_y);
         //cout << "REACHED GOAL!!!!!" << endl;
         //cout << "NUMBER OF MOVES" << "\t" << move_counter << endl;
         Store_Move_Data(move_counter);
         Reset_Agent_Info();
+        Assign_Starting_Location();
+        Run_Test_E();
     }
     Run_Test_F(sr);
     Write_Q_Table_To_File();
@@ -831,7 +857,7 @@ void Q_Learner::Build_Q_Table_2()
         double r = (double)rand()/RAND_MAX;
         temp.push_back(0.0001);
     }
-    for (int k=0; k<4; k++)
+    for (int k=0; k<9; k++)
     {
         agent.at(0).q_table.push_back(temp);
     }
@@ -842,11 +868,11 @@ void Q_Learner::Build_Q_Table_2()
 //Assigns a negative reward to the actions that would be out of bounds
 void Q_Learner::Assign_Values_To_Reward_Table_2()
 {
-    for (int i=0; i<4; i++)
+    for (int i=0; i<9; i++)
     {
         pE->reward_table.push_back(-1);
     }
-    pE->reward_table.at(3) = pP->goal_reward;
+    pE->reward_table.at(8) = pP->goal_reward;
 }
 
 
@@ -855,7 +881,7 @@ void Q_Learner::Assign_Values_To_Reward_Table_2()
 void Q_Learner::Display_Reward_Table_2()
 {
     cout << "REWARD TABLE" << endl;
-    for (int s=0; s<4; s++)
+    for (int s=0; s<9; s++)
     {
         cout << pE->reward_table.at(s) << "\t";
     }
@@ -875,7 +901,7 @@ void Q_Learner::Display_Q_Table_2()
     cout << "DOWN" << "\t" << "\t";
     cout << "LEFT" << "\t" << "\t";
     cout << endl;
-    for (int y=0; y<4; y++)
+    for (int y=0; y<9; y++)
     {
         cout << "STATE" << "\t" << y << "\t";
         for(int x=0; x<4; x++)
@@ -907,21 +933,41 @@ void Q_Learner::Build_Grid_World_2()
 //Sneses the agents state
 void Q_Learner::Sense_2()
 {
-    if(agent.at(0).x <= pP->goal_x && agent.at(0).y <= pP->goal_y)
+    if(agent.at(0).x < pP->goal_x && agent.at(0).y < pP->goal_y)
     {
         agent.at(0).state = 0;
     }
-    if(agent.at(0).x > pP->goal_x && agent.at(0).y <= pP->goal_y)
+    else if(agent.at(0).x == pP->goal_x && agent.at(0).y < pP->goal_y)
     {
         agent.at(0).state = 1;
     }
-    if(agent.at(0).y > pP->goal_y)
+    else if(agent.at(0).x > pP->goal_x && agent.at(0).y < pP->goal_y)
     {
         agent.at(0).state = 2;
     }
-    if(agent.at(0).x > pP->goal_x && agent.at(0).y > pP->goal_y)
+    else if(agent.at(0).x < pP->goal_x && agent.at(0).y == pP->goal_y)
     {
         agent.at(0).state = 3;
+    }
+    else if(agent.at(0).x > pP->goal_x && agent.at(0).y == pP->goal_y)
+    {
+        agent.at(0).state = 4;
+    }
+    else if(agent.at(0).x < pP->goal_x && agent.at(0).y > pP->goal_y)
+    {
+        agent.at(0).state = 5;
+    }
+    else if(agent.at(0).x == pP->goal_x && agent.at(0).y > pP->goal_y)
+    {
+        agent.at(0).state = 6;
+    }
+    else if(agent.at(0).x > pP->goal_x && agent.at(0).y > pP->goal_y)
+    {
+        agent.at(0).state = 7;
+    }
+    else if(agent.at(0).x == pP->goal_x && agent.at(0).y == pP->goal_y)
+    {
+        agent.at(0).state = 8;
     }
     //cout << "AGENT STATE" << "\t" << agent.at(0).state << endl;
 }
@@ -1021,6 +1067,7 @@ void Q_Learner::Greedy_Move_2()
         pE->board.at(agent.at(0).y).at(agent.at(0).x) = 1;
     }
     Sense_2();
+    agent.at(0).action = move;
     agent.at(0).path.push_back(agent.at(0).state);
     agent.at(0).actions.push_back(move);
 }
@@ -1068,6 +1115,7 @@ void Q_Learner::Random_Move_2()
         pE->board.at(agent.at(0).y).at(agent.at(0).x) = 1;
     }
     Sense_2();
+    agent.at(0).action = r;
     agent.at(0).path.push_back(agent.at(0).state);
     agent.at(0).actions.push_back(r);
 }
@@ -1092,7 +1140,7 @@ void Q_Learner::React_2()
     double B = agent.at(0).q_table.at(ss).at(best);
     double R = pE->reward_table.at(ss);
     agent.at(0).q_table.at(s).at(action) = A+pP->alpha*(R+(pP->gamma*B)-A);
-    //Run_Test_D(s, action);
+    Run_Test_D(s, action);
 }
 
 
@@ -1125,28 +1173,89 @@ void Q_Learner::Q_Learner_Move_Agent_2()
 
 
 //-------------------------------------------------------------------------
-//Runs test E
-void Q_Learner::Run_Test_G()
+//Writes the move data to a txt file
+void Q_Learner::Write_Move_Data_To_File_2()
 {
-    pP->test_F_counter = 0;
+    ofstream File2;
+    File2.open("Move_Data_2.txt", ios_base::app);
+    for (int t=0; t<pP->num_tries; t++)
+    {
+        File2 << move_data.at(t) << "\t";
+    }
+    File2 << endl;
+    move_data.clear();
+}
+
+
+//-------------------------------------------------------------------------
+//Writes the Q-table to a txt file
+void Q_Learner::Write_Q_Table_To_File_2()
+{
+    ofstream File1;
+    File1.open("Q_Tabel_2.txt");
+    File1 << "ACTION" << "\t" << "\t";
+    File1 << "UP" << "\t" << "\t";
+    File1 << "RIGHT" << "\t" << "\t";
+    File1 << "DOWN" << "\t" << "\t";
+    File1 << "LEFT" << "\t" << "\t";
+    File1 << endl;
+    for (int y=0; y<9; y++)
+    {
+        File1 << "STATE" << "\t" << y << "\t";
+        for(int x=0; x<4; x++)
+        {
+            File1 << agent.at(0).q_table.at(y).at(x) << "\t";
+        }
+        File1 << endl;
+    }
+    File1.close();
+    agent.at(0).q_table.clear();
+}
+
+
+//-------------------------------------------------------------------------
+//Runs test G
+void Q_Learner::Run_Test_G(int sr)
+{
     agent.clear();
+    pP->num_states = 9;
     Build_Population();
     Build_Q_Table_2();
-    Build_Grid_World_2();
-    while ((agent.at(0).x != pP->goal_x))
+    for (int t=0; t<pP->num_tries; t++)
     {
-        //cout << "MOVE NUMBER" << "\t" << move_counter << endl;
-        Q_Learner_Move_Agent_2();
-        while ((agent.at(0).y != pP->goal_y))
+        cout << "SR" << sr << "::" << t << endl;
+        cout << endl;
+        Build_Grid_World_2();
+        int move_counter= 0;
+        while ((agent.at(0).x != pP->goal_x))
         {
             //cout << "MOVE NUMBER" << "\t" << move_counter << endl;
+            move_counter += 1;
+            if (move_counter > 1000000)
+            {
+                cout << "CP" << endl;
+            }
             Q_Learner_Move_Agent_2();
+            while ((agent.at(0).y != pP->goal_y))
+            {
+                //cout << "MOVE NUMBER" << "\t" << move_counter << endl;
+                move_counter += 1;
+                if (move_counter > 1000000)
+                {
+                    cout << "CP" << endl;
+                }
+                Q_Learner_Move_Agent_2();
+            }
         }
+        Store_Move_Data(move_counter);
+        //cout << "REACHED GOAL" << endl;
+        assert(agent.at(0).x == pP->goal_x && agent.at(0).y == pP->goal_y);
+        //cout << "TEST G PASSED" << endl;
+        Reset_Agent_Info();
     }
-    cout << "REACHED GOAL" << endl;
-    assert(agent.at(0).x == pP->goal_x && agent.at(0).y == pP->goal_y);
-    cout << "TEST G PASSED" << endl;
-    agent.at(0).q_table.clear();
+    Run_Test_F(sr);
+    Write_Q_Table_To_File_2();
+    Write_Move_Data_To_File_2();
 }
 
 

@@ -28,6 +28,7 @@ public:
     int x;
     int y;
     int state;
+    int action;
     int greedy;
     vector<int> path;
     vector<int> actions;
